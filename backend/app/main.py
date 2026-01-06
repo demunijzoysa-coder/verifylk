@@ -3,12 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router as api_router
 from .config import get_settings
+from .db import Base, engine
 from .middleware.audit import audit_middleware
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.project_name)
+    Base.metadata.create_all(bind=engine)
 
     app.add_middleware(
         CORSMiddleware,
