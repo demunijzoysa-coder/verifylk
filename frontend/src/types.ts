@@ -39,3 +39,28 @@ export type VerificationRecord = {
   valid_until?: string
   created_at: string
 }
+
+export type OrgRecord = {
+  id: string
+  name: string
+  status: 'pending' | 'verified' | 'unverified'
+  contact_email?: string
+}
+
+export type Dispute = {
+  id: string
+  claim_id: string
+  status: 'open' | 'under_review' | 'resolved' | 'dismissed'
+  reason: string
+  resolution_notes?: string
+}
+
+export type AuditEntry = {
+  id: number
+  action: string
+  actor_id?: string | null
+  entity_type: string
+  entity_id: string
+  metadata?: Record<string, unknown> | null
+  created_at: string
+}

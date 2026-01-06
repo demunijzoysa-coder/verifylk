@@ -9,7 +9,8 @@ import {
   register,
   requestVerification,
 } from './api'
-import type { Claim, Role } from './types'
+import { getAuditLogs, getDisputes, getOrgs, verifyOrg, decideDispute } from './adminApi'
+import type { Claim, Role, OrgRecord, Dispute, AuditEntry } from './types'
 import './App.css'
 
 const defaultClaim = {
@@ -34,23 +35,9 @@ function App() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [showAuthOverlay, setShowAuthOverlay] = useState(!localStorage.getItem('access_token'))
-
-  const adminOrgs = [
-    { name: 'Community Bridge', status: 'pending', contact: 'org@community.lk' },
-    { name: 'TechWorks Jaffna', status: 'verified', contact: 'hello@techworks.lk' },
-    { name: 'GreenHands', status: 'pending', contact: 'team@greenhands.lk' },
-  ]
-
-  const adminDisputes = [
-    { id: 'DSP-104', claim: 'Volunteer Coordinator', status: 'open', reason: 'Dates mismatch' },
-    { id: 'DSP-089', claim: 'Apprentice Technician', status: 'under_review', reason: 'Supervisor contested rating' },
-  ]
-
-  const adminAudits = [
-    { action: 'claim.update', actor: 'candidate:malsha', target: 'CLM-220', time: '2h ago' },
-    { action: 'verification.decision', actor: 'verifier:techworks', target: 'CLM-219', time: '1d ago' },
-    { action: 'auth.login', actor: 'admin', target: 'system', time: '1d ago' },
-  ]
+  const [adminOrgs, setAdminOrgs] = useState<OrgRecord[]>([])
+  const [adminDisputes, setAdminDisputes] = useState<Dispute[]>([])
+  const [adminAudits, setAdminAudits] = useState<AuditEntry[]>([])
 
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -76,6 +63,15 @@ function App() {
       getInbox(token)
         .then(setInbox)
         .catch((err) => setMessage(err.message || 'Failed to load inbox'))
+    }
+    if (role === 'admin') {
+      Promise.all([getOrgs(token), getDisputes(token), getAuditLogs(token)])
+        .then(([orgs, disputes, audits]) => {
+          setAdminOrgs(orgs)
+          setAdminDisputes(disputes)
+          setAdminAudits(audits)
+        })
+        .catch((err) => setMessage(err.message || 'Failed to load admin data'))
     }
   }, [token, role])
 
@@ -154,12 +150,29 @@ function App() {
     }
   }
 
-  const handleAdminReview = (subject: string) => {
-    setMessage(`Admin action placeholder: review ${subject} (hook to backend when ready).`)
+  const handleAdminReview = async (orgId: string, currentStatus: OrgRecord['status']) => {
+    if (!token) return
+    const nextStatus = currentStatus === 'verified' ? 'pending' : 'verified'
+    try {
+      await verifyOrg(token, orgId, nextStatus)
+      const refreshed = await getOrgs(token)
+      setAdminOrgs(refreshed)
+      setMessage(`Org status updated to ${nextStatus}`)
+    } catch (err: any) {
+      setMessage(err.message || 'Org update failed')
+    }
   }
 
-  const handleAdminDispute = (id: string) => {
-    setMessage(`Admin action placeholder: resolve dispute ${id} (hook to backend when ready).`)
+  const handleAdminDispute = async (id: string, status: 'resolved' | 'dismissed') => {
+    if (!token) return
+    try {
+      await decideDispute(token, id, status, 'Reviewed by admin')
+      const refreshed = await getDisputes(token)
+      setAdminDisputes(refreshed)
+      setMessage(`Dispute ${id} marked ${status}`)
+    } catch (err: any) {
+      setMessage(err.message || 'Dispute update failed')
+    }
   }
 
   const handleFetchReport = async () => {
@@ -485,11 +498,11 @@ function App() {
                     <div className="admin-row" key={org.name}>
                       <div>
                         <p className="claim-title">{org.name}</p>
-                        <p className="muted">{org.contact}</p>
+                        <p className="muted">{org.contact_email}</p>
                       </div>
                       <div className="admin-actions">
                         <span className={`status ${org.status === 'verified' ? 'verified' : 'pending'}`}>{org.status}</span>
-                        <button className="cta tiny ghost" onClick={() => handleAdminReview(org.name)}>Review</button>
+                        <button className="cta tiny ghost" onClick={() => handleAdminReview(org.id, org.status)}>Toggle</button>
                       </div>
                     </div>
                   ))}
@@ -506,12 +519,15 @@ function App() {
                     <div className="admin-row" key={d.id}>
                       <div>
                         <p className="claim-title">{d.id}</p>
-                        <p className="muted">{d.claim}</p>
+                        <p className="muted">Claim: {d.claim_id}</p>
                         <p className="eyebrow">{d.reason}</p>
                       </div>
                       <div className="admin-actions">
                         <span className={`status ${d.status}`}>{d.status}</span>
-                        <button className="cta tiny ghost" onClick={() => handleAdminDispute(d.id)}>Decide</button>
+                        <div className="cta-row">
+                          <button className="cta tiny primary" onClick={() => handleAdminDispute(d.id, 'resolved')}>Resolve</button>
+                          <button className="cta tiny ghost" onClick={() => handleAdminDispute(d.id, 'dismissed')}>Dismiss</button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -528,9 +544,9 @@ function App() {
                     <div className="admin-row" key={`${a.action}-${idx}`}>
                       <div>
                         <p className="claim-title">{a.action}</p>
-                        <p className="muted">{a.actor} → {a.target}</p>
+                        <p className="muted">{a.actor_id || 'system'} → {a.entity_type}:{a.entity_id}</p>
                       </div>
-                      <span className="eyebrow">{a.time}</span>
+                      <span className="eyebrow">{new Date(a.created_at).toLocaleString()}</span>
                     </div>
                   ))}
                 </div>

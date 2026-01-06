@@ -7,8 +7,7 @@ from .db import Base, engine
 from .db import SessionLocal
 from .middleware.audit import audit_middleware
 from .repositories.users import get_by_email, create_user
-from .security import get_password_hash
-from .models import UserRole
+from .models import Organization, OrgStatus, UserRole
 
 
 def create_app() -> FastAPI:
@@ -33,7 +32,23 @@ def create_app() -> FastAPI:
         finally:
             db.close()
 
+    def seed_orgs():
+        db = SessionLocal()
+        try:
+            existing = db.query(Organization).count()
+            if existing == 0:
+                samples = [
+                    Organization(name="Community Bridge", verified_status=OrgStatus.pending, contact_email="org@community.lk"),
+                    Organization(name="TechWorks Jaffna", verified_status=OrgStatus.verified, contact_email="hello@techworks.lk"),
+                    Organization(name="GreenHands", verified_status=OrgStatus.pending, contact_email="team@greenhands.lk"),
+                ]
+                db.add_all(samples)
+                db.commit()
+        finally:
+            db.close()
+
     seed_admin()
+    seed_orgs()
 
     app.add_middleware(
         CORSMiddleware,
