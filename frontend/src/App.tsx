@@ -73,7 +73,7 @@ function App() {
       setMessage(`Logged in as ${res.role}`)
       setShowAuthOverlay(false)
     } catch (err: any) {
-      setMessage(err.message || 'Login failed')
+      setMessage(err.message || 'Login failed. Check email, password, and role.')
     } finally {
       setLoading(false)
     }
@@ -283,156 +283,175 @@ function App() {
       </header>
 
       <section className="grid">
-        <div className="panel">
-          <div className="panel-head">
-            <div>
-              <p className="eyebrow">Candidate</p>
-              <h3>Create experience claim</h3>
+        {role === 'candidate' && (
+          <div className="panel">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Candidate</p>
+                <h3>Create experience claim</h3>
+              </div>
+              <button className="cta small ghost" onClick={() => setClaimForm(defaultClaim)}>Reset</button>
             </div>
-            <button className="cta small ghost" onClick={() => setClaimForm(defaultClaim)}>Reset</button>
-          </div>
-          <div className="form-grid">
-            <label className="field">
-              <span>Title</span>
-              <input value={claimForm.title} onChange={(e) => setClaimForm({ ...claimForm, title: e.target.value })} />
-            </label>
-            <label className="field">
-              <span>Type</span>
-              <select value={claimForm.claim_type} onChange={(e) => setClaimForm({ ...claimForm, claim_type: e.target.value })}>
-                <option value="volunteering">Volunteering</option>
-                <option value="internship">Internship</option>
-                <option value="apprenticeship">Apprenticeship</option>
-                <option value="informal">Informal</option>
-                <option value="freelance">Freelance</option>
-                <option value="training">Training</option>
-              </select>
-            </label>
-            <label className="field">
-              <span>Organization</span>
-              <input value={claimForm.organization_name} onChange={(e) => setClaimForm({ ...claimForm, organization_name: e.target.value })} />
-            </label>
-            <label className="field">
-              <span>Supervisor</span>
-              <input value={claimForm.supervisor_name} onChange={(e) => setClaimForm({ ...claimForm, supervisor_name: e.target.value })} />
-            </label>
-            <label className="field">
-              <span>Supervisor Contact</span>
-              <input value={claimForm.supervisor_contact} onChange={(e) => setClaimForm({ ...claimForm, supervisor_contact: e.target.value })} />
-            </label>
-            <label className="field">
-              <span>Start Date</span>
-              <input type="date" value={claimForm.start_date} onChange={(e) => setClaimForm({ ...claimForm, start_date: e.target.value })} />
-            </label>
-            <label className="field">
-              <span>End Date</span>
-              <input type="date" value={claimForm.end_date} onChange={(e) => setClaimForm({ ...claimForm, end_date: e.target.value })} />
-            </label>
-            <label className="field wide">
-              <span>Description</span>
-              <textarea value={claimForm.description} onChange={(e) => setClaimForm({ ...claimForm, description: e.target.value })} />
-            </label>
-            <label className="field wide">
-              <span>Skill Tags (comma separated)</span>
-              <input value={claimForm.skill_tags} onChange={(e) => setClaimForm({ ...claimForm, skill_tags: e.target.value })} />
-            </label>
-          </div>
-          <div className="panel-actions">
-            <button className="cta primary" onClick={handleCreateClaim} disabled={loading || role !== 'candidate'}>
-              Save claim
-            </button>
-          </div>
-          <div className="claim-list">
-            {claims.map((claim) => (
-              <div className="claim" key={claim.id}>
-                <div>
-                  <p className="claim-title">{claim.title}</p>
-                  <p className="muted">{claim.organization_name}</p>
-                  <div className="tag-row">
-                    {(claim.skill_tags || []).map((t) => (
-                      <span className="tag" key={t}>{t}</span>
-                    ))}
+            <div className="form-grid">
+              <label className="field">
+                <span>Title</span>
+                <input value={claimForm.title} onChange={(e) => setClaimForm({ ...claimForm, title: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Type</span>
+                <select value={claimForm.claim_type} onChange={(e) => setClaimForm({ ...claimForm, claim_type: e.target.value })}>
+                  <option value="volunteering">Volunteering</option>
+                  <option value="internship">Internship</option>
+                  <option value="apprenticeship">Apprenticeship</option>
+                  <option value="informal">Informal</option>
+                  <option value="freelance">Freelance</option>
+                  <option value="training">Training</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Organization</span>
+                <input value={claimForm.organization_name} onChange={(e) => setClaimForm({ ...claimForm, organization_name: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Supervisor</span>
+                <input value={claimForm.supervisor_name} onChange={(e) => setClaimForm({ ...claimForm, supervisor_name: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Supervisor Contact</span>
+                <input value={claimForm.supervisor_contact} onChange={(e) => setClaimForm({ ...claimForm, supervisor_contact: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Start Date</span>
+                <input type="date" value={claimForm.start_date} onChange={(e) => setClaimForm({ ...claimForm, start_date: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>End Date</span>
+                <input type="date" value={claimForm.end_date} onChange={(e) => setClaimForm({ ...claimForm, end_date: e.target.value })} />
+              </label>
+              <label className="field wide">
+                <span>Description</span>
+                <textarea value={claimForm.description} onChange={(e) => setClaimForm({ ...claimForm, description: e.target.value })} />
+              </label>
+              <label className="field wide">
+                <span>Skill Tags (comma separated)</span>
+                <input value={claimForm.skill_tags} onChange={(e) => setClaimForm({ ...claimForm, skill_tags: e.target.value })} />
+              </label>
+            </div>
+            <div className="panel-actions">
+              <button className="cta primary" onClick={handleCreateClaim} disabled={loading || role !== 'candidate'}>
+                Save claim
+              </button>
+            </div>
+            <div className="claim-list">
+              {claims.map((claim) => (
+                <div className="claim" key={claim.id}>
+                  <div>
+                    <p className="claim-title">{claim.title}</p>
+                    <p className="muted">{claim.organization_name}</p>
+                    <div className="tag-row">
+                      {(claim.skill_tags || []).map((t) => (
+                        <span className="tag" key={t}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="claim-meta">
+                    <span className={`status ${claim.status}`}>{claim.status}</span>
+                    {claim.credibility_score != null && <span className="score-chip">{claim.credibility_score}</span>}
+                    {claim.status === 'draft' && (
+                      <button className="cta ghost tiny" onClick={() => handleRequestVerification(claim.id)}>Request verification</button>
+                    )}
                   </div>
                 </div>
-                <div className="claim-meta">
-                  <span className={`status ${claim.status}`}>{claim.status}</span>
-                  {claim.credibility_score != null && <span className="score-chip">{claim.credibility_score}</span>}
-                  {claim.status === 'draft' && (
-                    <button className="cta ghost tiny" onClick={() => handleRequestVerification(claim.id)}>Request verification</button>
-                  )}
-                </div>
-              </div>
-            ))}
-            {claims.length === 0 && <p className="muted">No claims yet.</p>}
+              ))}
+              {claims.length === 0 && <p className="muted">No claims yet.</p>}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="panel">
-          <div className="panel-head">
-            <div>
-              <p className="eyebrow">Verifier</p>
-              <h3>Inbox</h3>
-            </div>
-            <span className="eyebrow">{inbox.length} pending</span>
-          </div>
-          <div className="inbox">
-            {inbox.map((item) => (
-              <div className="inbox-item" key={item.id}>
-                <div>
-                  <p className="claim-title">{item.title}</p>
-                  <p className="muted">{item.organization_name}</p>
-                  <p className="eyebrow">{item.supervisor_name}</p>
-                </div>
-                <div className="action-col">
-                  <button className="cta tiny primary" onClick={() => handleDecision(item.id, 'approved')}>Approve</button>
-                  <button className="cta tiny ghost" onClick={() => handleDecision(item.id, 'rejected')}>Reject</button>
-                </div>
+        {role === 'verifier' && (
+          <div className="panel">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Verifier</p>
+                <h3>Inbox</h3>
               </div>
-            ))}
-            {inbox.length === 0 && <p className="muted">No pending verifications.</p>}
+              <span className="eyebrow">{inbox.length} pending</span>
+            </div>
+            <div className="inbox">
+              {inbox.map((item) => (
+                <div className="inbox-item" key={item.id}>
+                  <div>
+                    <p className="claim-title">{item.title}</p>
+                    <p className="muted">{item.organization_name}</p>
+                    <p className="eyebrow">{item.supervisor_name}</p>
+                  </div>
+                  <div className="action-col">
+                    <button className="cta tiny primary" onClick={() => handleDecision(item.id, 'approved')}>Approve</button>
+                    <button className="cta tiny ghost" onClick={() => handleDecision(item.id, 'rejected')}>Reject</button>
+                  </div>
+                </div>
+              ))}
+              {inbox.length === 0 && <p className="muted">No pending verifications.</p>}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="panel wide">
-          <div className="panel-head">
-            <div>
-              <p className="eyebrow">Employer</p>
-              <h3>Report lookup</h3>
-            </div>
-            <button className="cta small ghost" onClick={handleFetchReport} disabled={loading}>Fetch</button>
-          </div>
-          <div className="form-grid">
-            <label className="field">
-              <span>Report token (claim id for now)</span>
-              <input value={reportId} onChange={(e) => setReportId(e.target.value)} placeholder="claim id or token" />
-            </label>
-          </div>
-          {report && (
-            <div className="report-details">
-              <div className="report-row">
-                <div>
-                  <p className="muted">Candidate claim</p>
-                  <p className="claim-title">{report.title}</p>
-                  <p className="muted">{report.organization_name}</p>
-                </div>
-                <div className="score">
-                  <span>Credibility</span>
-                  <strong>{report.credibility_score ?? 0}</strong>
-                </div>
+        {role === 'employer' && (
+          <div className="panel wide">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Employer</p>
+                <h3>Report lookup</h3>
               </div>
-              <ul className="factor-list">
-                {(report.credibility_breakdown || []).map((b) => (
-                  <li key={b.factor}>
-                    <div>
-                      <p className="factor">{b.factor}</p>
-                      <p className="reason">{b.reason}</p>
-                    </div>
-                    <span className="score-chip">{b.score}</span>
-                  </li>
-                ))}
-              </ul>
+              <button className="cta small ghost" onClick={handleFetchReport} disabled={loading}>Fetch</button>
             </div>
-          )}
-        </div>
+            <div className="form-grid">
+              <label className="field">
+                <span>Report token (claim id for now)</span>
+                <input value={reportId} onChange={(e) => setReportId(e.target.value)} placeholder="claim id or token" />
+              </label>
+            </div>
+            {report && (
+              <div className="report-details">
+                <div className="report-row">
+                  <div>
+                    <p className="muted">Candidate claim</p>
+                    <p className="claim-title">{report.title}</p>
+                    <p className="muted">{report.organization_name}</p>
+                  </div>
+                  <div className="score">
+                    <span>Credibility</span>
+                    <strong>{report.credibility_score ?? 0}</strong>
+                  </div>
+                </div>
+                <ul className="factor-list">
+                  {(report.credibility_breakdown || []).map((b) => (
+                    <li key={b.factor}>
+                      <div>
+                        <p className="factor">{b.factor}</p>
+                        <p className="reason">{b.reason}</p>
+                      </div>
+                      <span className="score-chip">{b.score}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {role === 'admin' && (
+          <div className="panel wide">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Admin</p>
+                <h3>Workspace</h3>
+              </div>
+              <span className="eyebrow">Moderation & org verification</span>
+            </div>
+            <p className="muted">Admin tools will include org verification, dispute review, and audit inspection. (Placeholder view)</p>
+          </div>
+        )}
       </section>
     </div>
   )

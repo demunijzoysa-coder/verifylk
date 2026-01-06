@@ -73,9 +73,11 @@ This starts backend (FastAPI on 8000) and frontend (Vite on 5173) in separate te
 
 ## What the UI does
 - **Auth overlay**: appears first; login or register; once signed in you stay signed in on this device until logout.
-- **Candidate**: create claims, request verification, view claim statuses and scores.
-- **Verifier**: see inbox and approve/reject requests.
-- **Employer**: fetch a report by token (MVP uses claim id as token).
+- **Role-specific views**:
+  - Candidate: create claims, request verification, view statuses and scores.
+  - Verifier: inbox to approve/reject requests.
+  - Employer: fetch a report by token (MVP uses claim id as token).
+  - Admin: placeholder workspace (org verification, disputes, audit planned).
 
 ## API quick links
 - Swagger: http://127.0.0.1:8000/docs
