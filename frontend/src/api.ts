@@ -28,12 +28,19 @@ export async function login(email: string, password: string) {
   const body = new URLSearchParams()
   body.append('username', email)
   body.append('password', password)
+  body.append('grant_type', 'password')
+  body.append('scope', '')
+  body.append('client_id', 'frontend')
+  body.append('client_secret', '')
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
   })
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    const msg = await res.text()
+    throw new Error(msg || 'Login failed')
+  }
   return res.json() as Promise<{ access_token: string; refresh_token: string; role: string }>
 }
 
