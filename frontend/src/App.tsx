@@ -1,90 +1,211 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  createClaim,
+  decideVerification,
+  fetchReport,
+  getClaims,
+  getInbox,
+  login,
+  register,
+  requestVerification,
+} from './api'
+import type { Claim, Role } from './types'
 import './App.css'
 
-type Claim = {
-  title: string
-  org: string
-  status: 'draft' | 'pending' | 'verified' | 'rejected'
-  score?: number
-  tags: string[]
+const defaultClaim = {
+  title: '',
+  claim_type: 'volunteering',
+  organization_name: '',
+  supervisor_name: '',
+  supervisor_contact: '',
+  start_date: '',
+  end_date: '',
+  description: '',
+  skill_tags: '',
 }
-
-type VerificationItem = {
-  candidate: string
-  role: string
-  org: string
-  submitted: string
-}
-
-const sampleClaims: Claim[] = [
-  { title: 'Volunteer Coordinator', org: 'Community Bridge', status: 'verified', score: 86, tags: ['coordination', 'youth'] },
-  { title: 'Apprentice Technician', org: 'TechWorks Jaffna', status: 'pending', tags: ['hardware', 'support'] },
-  { title: 'Field Trainer', org: 'AgriReach', status: 'draft', tags: ['training', 'field'] },
-]
-
-const verificationInbox: VerificationItem[] = [
-  { candidate: 'Malsha Perera', role: 'Apprentice Technician', org: 'TechWorks Jaffna', submitted: '2h ago' },
-  { candidate: 'Ruwan Jayasuriya', role: 'Volunteer Lead', org: 'GreenHands', submitted: '1d ago' },
-]
-
-const reportFactors = [
-  { factor: 'Verified org account', score: '+20', reason: 'TechWorks Jaffna verified' },
-  { factor: 'Recency', score: '+15', reason: 'Completed in last 12 months' },
-  { factor: 'Evidence', score: '+10', reason: 'Public letter + hours log' },
-  { factor: 'Multiple verifications', score: '+20', reason: 'Supervisor + HR' },
-  { factor: 'Expiry', score: '-0', reason: 'Valid until 2026-06-01' },
-]
 
 function App() {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('access_token'))
+  const [role, setRole] = useState<Role>(() => (localStorage.getItem('role') as Role) || 'candidate')
+  const [claims, setClaims] = useState<Claim[]>([])
+  const [inbox, setInbox] = useState<Claim[]>([])
+  const [reportId, setReportId] = useState('')
+  const [report, setReport] = useState<Claim | null>(null)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [registerForm, setRegisterForm] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+    role: 'candidate',
+  })
+
+  const [claimForm, setClaimForm] = useState(defaultClaim)
+
+  const isAuthed = useMemo(() => Boolean(token), [token])
+
+  useEffect(() => {
+    if (!token) return
+    if (role === 'candidate') {
+      getClaims(token)
+        .then(setClaims)
+        .catch((err) => setMessage(err.message || 'Failed to load claims'))
+    }
+    if (role === 'verifier') {
+      getInbox(token)
+        .then(setInbox)
+        .catch((err) => setMessage(err.message || 'Failed to load inbox'))
+    }
+  }, [token, role])
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true)
+      const res = await login(loginEmail, loginPassword)
+      localStorage.setItem('access_token', res.access_token)
+      localStorage.setItem('role', role)
+      setToken(res.access_token)
+      setMessage('Logged in')
+    } catch (err: any) {
+      setMessage(err.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRegister = async () => {
+    try {
+      setLoading(true)
+      await register(registerForm)
+      setMessage('Registered. Now login.')
+    } catch (err: any) {
+      setMessage(err.message || 'Registration failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateClaim = async () => {
+    if (!token) return setMessage('Login first')
+    try {
+      setLoading(true)
+      const payload = {
+        ...claimForm,
+        skill_tags: claimForm.skill_tags
+          ? claimForm.skill_tags.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
+      }
+      await createClaim(token, payload)
+      const refreshed = await getClaims(token)
+      setClaims(refreshed)
+      setClaimForm(defaultClaim)
+      setMessage('Claim created')
+    } catch (err: any) {
+      setMessage(err.message || 'Create claim failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRequestVerification = async (id: string) => {
+    if (!token) return
+    try {
+      await requestVerification(token, id)
+      const refreshed = await getClaims(token)
+      setClaims(refreshed)
+      setMessage('Verification requested')
+    } catch (err: any) {
+      setMessage(err.message || 'Request failed')
+    }
+  }
+
+  const handleDecision = async (id: string, outcome: 'approved' | 'rejected') => {
+    if (!token) return
+    try {
+      await decideVerification(token, id, { outcome })
+      const refreshed = await getInbox(token)
+      setInbox(refreshed)
+      setMessage(`Claim ${outcome}`)
+    } catch (err: any) {
+      setMessage(err.message || 'Decision failed')
+    }
+  }
+
+  const handleFetchReport = async () => {
+    try {
+      setLoading(true)
+      const data = await fetchReport(token, reportId)
+      setReport(data)
+      setMessage('')
+    } catch (err: any) {
+      setMessage(err.message || 'Report not found')
+      setReport(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const logout = () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('role')
+    setToken(null)
+    setClaims([])
+    setInbox([])
+    setReport(null)
+  }
+
   return (
     <div className="page">
       <header className="hero">
         <div>
-          <div className="badge">Sri Lanka · Trust Infrastructure</div>
-          <h1>Proof of real work, verified by humans.</h1>
+          <div className="badge">Sri Lanka · VerifyLK</div>
+          <h1>Proof of experience with one launch command.</h1>
           <p>
-            Candidates capture evidence, verifiers endorse with audit trails, and employers see a clear
-            credibility score they can trust. No blockchain, no black boxes—just accountable verification.
+            Start the stack with <code>./start.ps1</code>, register, login, create claims, request verification, and share reports—all from this UI.
           </p>
           <div className="cta-row">
-            <button className="cta primary">Start as Candidate</button>
-            <button className="cta ghost">Join as Verifier</button>
-            <span className="cta-note">Signed, shareable reports ready in minutes.</span>
+            <button className="cta primary" onClick={handleLogin} disabled={loading}>Login</button>
+            <button className="cta ghost" onClick={handleRegister} disabled={loading}>Register</button>
+            <span className="cta-note">Roles: candidate, verifier, employer, admin.</span>
           </div>
-          <div className="metrics">
-            <div><strong>12</strong><span>claims verified this week</span></div>
-            <div><strong>4.2 hrs</strong><span>median time to verify</span></div>
-            <div><strong>3</strong><span>pilot orgs onboarded</span></div>
-          </div>
+          {message && <div className="flash">{message}</div>}
         </div>
         <div className="card report">
           <div className="report-header">
             <div>
-              <p className="eyebrow">Verification Report</p>
-              <h2>Malsha Perera</h2>
-              <p className="muted">Apprentice Technician · TechWorks Jaffna</p>
+              <p className="eyebrow">Auth & Roles</p>
+              <h2>{isAuthed ? `Logged in as ${role}` : 'Not logged in'}</h2>
+              <p className="muted">Tokens are stored locally while this tab is open.</p>
             </div>
             <div className="score">
-              <span>Credibility</span>
-              <strong>86</strong>
+              <span>Status</span>
+              <strong>{isAuthed ? 'Live' : 'Offline'}</strong>
             </div>
           </div>
-          <ul className="factor-list">
-            {reportFactors.map((f) => (
-              <li key={f.factor}>
-                <div>
-                  <p className="factor">{f.factor}</p>
-                  <p className="reason">{f.reason}</p>
-                </div>
-                <span className="score-chip">{f.score}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="link-row">
-            <div>
-              <p className="eyebrow">Share link</p>
-              <p className="muted">verify.lk/report/4f1d-92ef</p>
+          <div className="form-grid">
+            <label className="field">
+              <span>Email</span>
+              <input value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" />
+            </label>
+            <label className="field">
+              <span>Role</span>
+              <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                <option value="candidate">Candidate</option>
+                <option value="verifier">Verifier</option>
+                <option value="employer">Employer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+            <div className="auth-actions">
+              <button className="cta tiny ghost" onClick={logout}>Logout</button>
             </div>
-            <button className="cta small">Copy</button>
           </div>
         </div>
       </header>
@@ -94,29 +215,82 @@ function App() {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Candidate</p>
-              <h3>Experience claims</h3>
+              <h3>Create experience claim</h3>
             </div>
-            <button className="cta small">Add claim</button>
+            <button className="cta small ghost" onClick={() => setClaimForm(defaultClaim)}>Reset</button>
+          </div>
+          <div className="form-grid">
+            <label className="field">
+              <span>Title</span>
+              <input value={claimForm.title} onChange={(e) => setClaimForm({ ...claimForm, title: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Type</span>
+              <select value={claimForm.claim_type} onChange={(e) => setClaimForm({ ...claimForm, claim_type: e.target.value })}>
+                <option value="volunteering">Volunteering</option>
+                <option value="internship">Internship</option>
+                <option value="apprenticeship">Apprenticeship</option>
+                <option value="informal">Informal</option>
+                <option value="freelance">Freelance</option>
+                <option value="training">Training</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>Organization</span>
+              <input value={claimForm.organization_name} onChange={(e) => setClaimForm({ ...claimForm, organization_name: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Supervisor</span>
+              <input value={claimForm.supervisor_name} onChange={(e) => setClaimForm({ ...claimForm, supervisor_name: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Supervisor Contact</span>
+              <input value={claimForm.supervisor_contact} onChange={(e) => setClaimForm({ ...claimForm, supervisor_contact: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Start Date</span>
+              <input type="date" value={claimForm.start_date} onChange={(e) => setClaimForm({ ...claimForm, start_date: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>End Date</span>
+              <input type="date" value={claimForm.end_date} onChange={(e) => setClaimForm({ ...claimForm, end_date: e.target.value })} />
+            </label>
+            <label className="field wide">
+              <span>Description</span>
+              <textarea value={claimForm.description} onChange={(e) => setClaimForm({ ...claimForm, description: e.target.value })} />
+            </label>
+            <label className="field wide">
+              <span>Skill Tags (comma separated)</span>
+              <input value={claimForm.skill_tags} onChange={(e) => setClaimForm({ ...claimForm, skill_tags: e.target.value })} />
+            </label>
+          </div>
+          <div className="panel-actions">
+            <button className="cta primary" onClick={handleCreateClaim} disabled={loading || role !== 'candidate'}>
+              Save claim
+            </button>
           </div>
           <div className="claim-list">
-            {sampleClaims.map((claim) => (
-              <div className="claim" key={claim.title}>
+            {claims.map((claim) => (
+              <div className="claim" key={claim.id}>
                 <div>
                   <p className="claim-title">{claim.title}</p>
-                  <p className="muted">{claim.org}</p>
+                  <p className="muted">{claim.organization_name}</p>
                   <div className="tag-row">
-                    {claim.tags.map((t) => (
+                    {(claim.skill_tags || []).map((t) => (
                       <span className="tag" key={t}>{t}</span>
                     ))}
                   </div>
                 </div>
                 <div className="claim-meta">
                   <span className={`status ${claim.status}`}>{claim.status}</span>
-                  {claim.score && <span className="score-chip">{claim.score}</span>}
-                  <button className="cta ghost tiny">Share</button>
+                  {claim.credibility_score != null && <span className="score-chip">{claim.credibility_score}</span>}
+                  {claim.status === 'draft' && (
+                    <button className="cta ghost tiny" onClick={() => handleRequestVerification(claim.id)}>Request verification</button>
+                  )}
                 </div>
               </div>
             ))}
+            {claims.length === 0 && <p className="muted">No claims yet.</p>}
           </div>
         </div>
 
@@ -124,24 +298,25 @@ function App() {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Verifier</p>
-              <h3>Verification inbox</h3>
+              <h3>Inbox</h3>
             </div>
-            <button className="cta small ghost">View history</button>
+            <span className="eyebrow">{inbox.length} pending</span>
           </div>
           <div className="inbox">
-            {verificationInbox.map((item) => (
-              <div className="inbox-item" key={item.candidate}>
+            {inbox.map((item) => (
+              <div className="inbox-item" key={item.id}>
                 <div>
-                  <p className="claim-title">{item.candidate}</p>
-                  <p className="muted">{item.role} · {item.org}</p>
-                  <p className="eyebrow">{item.submitted}</p>
+                  <p className="claim-title">{item.title}</p>
+                  <p className="muted">{item.organization_name}</p>
+                  <p className="eyebrow">{item.supervisor_name}</p>
                 </div>
                 <div className="action-col">
-                  <button className="cta tiny primary">Approve</button>
-                  <button className="cta tiny ghost">Reject</button>
+                  <button className="cta tiny primary" onClick={() => handleDecision(item.id, 'approved')}>Approve</button>
+                  <button className="cta tiny ghost" onClick={() => handleDecision(item.id, 'rejected')}>Reject</button>
                 </div>
               </div>
             ))}
+            {inbox.length === 0 && <p className="muted">No pending verifications.</p>}
           </div>
         </div>
 
@@ -149,49 +324,42 @@ function App() {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Employer</p>
-              <h3>Report validation</h3>
+              <h3>Report lookup</h3>
             </div>
-            <button className="cta small ghost">Request follow-up</button>
+            <button className="cta small ghost" onClick={handleFetchReport} disabled={loading}>Fetch</button>
           </div>
-          <div className="report-row">
-            <div>
-              <p className="muted">Link status</p>
-              <p className="status-pill ok">Valid · Expires 2026-06-01</p>
+          <div className="form-grid">
+            <label className="field">
+              <span>Report token (claim id for now)</span>
+              <input value={reportId} onChange={(e) => setReportId(e.target.value)} placeholder="claim id or token" />
+            </label>
+          </div>
+          {report && (
+            <div className="report-details">
+              <div className="report-row">
+                <div>
+                  <p className="muted">Candidate claim</p>
+                  <p className="claim-title">{report.title}</p>
+                  <p className="muted">{report.organization_name}</p>
+                </div>
+                <div className="score">
+                  <span>Credibility</span>
+                  <strong>{report.credibility_score ?? 0}</strong>
+                </div>
+              </div>
+              <ul className="factor-list">
+                {(report.credibility_breakdown || []).map((b) => (
+                  <li key={b.factor}>
+                    <div>
+                      <p className="factor">{b.factor}</p>
+                      <p className="reason">{b.reason}</p>
+                    </div>
+                    <span className="score-chip">{b.score}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div>
-              <p className="muted">Org badge</p>
-              <p className="status-pill badge">Org verified</p>
-            </div>
-            <div>
-              <p className="muted">Evidence</p>
-              <p className="status-pill">Public letter · Hours log</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="info">
-        <div>
-          <p className="eyebrow">Why it works</p>
-          <h3>Human verification, audit trails, time-bound validity.</h3>
-          <p className="muted">
-            Every action is logged. Claims expire unless refreshed. Scores are explainable so employers and programs
-            see why a candidate is credible.
-          </p>
-        </div>
-        <div className="pillars">
-          <div>
-            <h4>Evidence-backed</h4>
-            <p>Upload letters, photos, certificates. Control what’s public vs verifier-only.</p>
-          </div>
-          <div>
-            <h4>Org-first</h4>
-            <p>Verifiers use org accounts; future tiers add badges and domain verification.</p>
-          </div>
-          <div>
-            <h4>Disputes</h4>
-            <p>Flag, review, and resolve—keeping a clear audit history for trust.</p>
-          </div>
+          )}
         </div>
       </section>
     </div>

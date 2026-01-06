@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 
 from ....config import get_settings
 from ....db import get_db
-from ....models import UserRole
+from ....models import User, UserRole
 from ....repositories.users import create_user, get_by_email
 from ....schemas.models import Token, UserCreate, UserOut
 from ....security import create_access_token, create_refresh_token, verify_password
+from ....dependencies import get_current_user
 
 router = APIRouter()
 settings = get_settings()
@@ -44,3 +45,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         access_token=create_access_token(user.id, user.role.value, access_expires),
         refresh_token=create_refresh_token(user.id, user.role.value, refresh_expires),
     )
+
+
+@router.get("/me", response_model=UserOut, summary="Current user")
+def me(current_user: User = Depends(get_current_user)):
+    return current_user

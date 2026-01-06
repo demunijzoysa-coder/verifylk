@@ -104,6 +104,15 @@ p {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.flash {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(76, 248, 178, 0.15);
+  border: 1px solid rgba(76, 248, 178, 0.3);
+  color: #e5fff4;
+}
+
 .metrics {
   display: flex;
   gap: 1.5rem;
@@ -348,6 +357,58 @@ p {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.8rem;
+  padding: 0.9rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.15);
+  color: #e5f7f1;
+}
+
+.field textarea {
+  min-height: 80px;
+}
+
+.field.wide {
+  grid-column: 1 / -1;
+}
+
+.auth-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.report-details {
+  margin-top: 0.75rem;
+  background: rgba(18, 26, 34, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.9rem;
   padding: 0.9rem;
 }
 

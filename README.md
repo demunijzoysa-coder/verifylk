@@ -61,6 +61,12 @@ Key docs:
 - docs/api-spec.md — endpoints
 - docs/scoring.md — scoring rules
 
+## One-command launcher
+- Windows: `.\start.ps1` (add `-SkipInstall` after first run to speed up)
+- macOS/Linux: `./start.sh` (use `--skip-install` after first run)
+
+This starts backend (FastAPI on 8000) and frontend (Vite on 5173) in separate terminals.
+
 ## Roadmap (phased)
 - Phase 1: MVP flows, scoring, report links, moderation & dispute basics.
 - Phase 2: Org verification tiers, bulk verification, QR cards, employer API, SMS support.
