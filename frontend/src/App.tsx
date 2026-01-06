@@ -77,6 +77,7 @@ function App() {
 
   const handleLogin = async () => {
     try {
+      setMessage('')
       setLoading(true)
       const res = await login(loginEmail, loginPassword)
       localStorage.setItem('access_token', res.access_token)
@@ -199,6 +200,8 @@ function App() {
     setShowAuthOverlay(true)
   }
 
+  const disableRoleSelect = isAuthed
+
   if (showAuthOverlay) {
     return (
       <div className="overlay">
@@ -221,7 +224,7 @@ function App() {
             </label>
             <label className="field">
               <span>Role</span>
-              <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+              <select value={role} onChange={(e) => !disableRoleSelect && setRole(e.target.value as Role)} disabled={disableRoleSelect}>
                 <option value="candidate">Candidate</option>
                 <option value="verifier">Verifier</option>
                 <option value="employer">Employer</option>
@@ -272,17 +275,17 @@ function App() {
     <div className="page">
       <header className="hero">
         <div>
-          <div className="badge">Sri Lanka · VerifyLK</div>
-          <h1>Proof of experience with one launch command.</h1>
-          <p>
-            Start the stack with <code>./start.ps1</code>, register, login, create claims, request verification, and share reports—all from this UI.
-          </p>
-          <div className="cta-row">
+            <div className="badge">Sri Lanka · VerifyLK</div>
+            <h1>Proof of experience with one launch command.</h1>
+            <p>
+              Start the stack with <code>./start.ps1</code>, register, login, create claims, request verification, and share reports—all from this UI.
+            </p>
+            <div className="cta-row">
             <button className="cta primary" onClick={logout}>Logout</button>
             <span className="cta-note">Logged in as {role}</span>
+            </div>
+            {message && <div className="flash">{message}</div>}
           </div>
-          {message && <div className="flash">{message}</div>}
-        </div>
         <div className="card report">
           <div className="report-header">
             <div>

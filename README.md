@@ -67,6 +67,11 @@ Key docs:
 
 This starts backend (FastAPI on 8000) and frontend (Vite on 5173) in separate terminals.
 
+## One-command stop
+- Windows: `.\stop.ps1`
+- macOS/Linux: `./stop.sh`
+Best effort: stops processes on ports 8000 and 5173; close any remaining dev terminals if still running.
+
 ## Accounts and login
 - Seeded admin (for testing): `admin@gmail.com` / `1234` (role `admin`). Created automatically on backend start.
 - Register other roles (candidate, verifier, employer) via the UI overlay. Tokens persist in the browser until you log out.
@@ -77,7 +82,7 @@ This starts backend (FastAPI on 8000) and frontend (Vite on 5173) in separate te
   - Candidate: create claims, request verification, view statuses and scores.
   - Verifier: inbox to approve/reject requests.
   - Employer: fetch a report by token (MVP uses claim id as token).
-  - Admin: placeholder workspace (org verification, disputes, audit planned).
+  - Admin: org verification toggle, disputes resolve/dismiss, audit log list (sample data/seeded orgs).
 
 ## API quick links
 - Swagger: http://127.0.0.1:8000/docs
