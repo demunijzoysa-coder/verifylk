@@ -66,9 +66,10 @@ function App() {
       setLoading(true)
       const res = await login(loginEmail, loginPassword)
       localStorage.setItem('access_token', res.access_token)
-      localStorage.setItem('role', role)
+      localStorage.setItem('role', res.role)
+      setRole(res.role as Role)
       setToken(res.access_token)
-      setMessage('Logged in')
+      setMessage(`Logged in as ${res.role}`)
     } catch (err: any) {
       setMessage(err.message || 'Login failed')
     } finally {
@@ -171,6 +172,7 @@ function App() {
             <button className="cta ghost" onClick={handleRegister} disabled={loading}>Register</button>
             <span className="cta-note">Roles: candidate, verifier, employer, admin.</span>
           </div>
+          <div className="flash">Demo admin: admin@gmail.com / 1234 (role admin)</div>
           {message && <div className="flash">{message}</div>}
         </div>
         <div className="card report">

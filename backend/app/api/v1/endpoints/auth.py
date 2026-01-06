@@ -8,7 +8,7 @@ from ....config import get_settings
 from ....db import get_db
 from ....models import User, UserRole
 from ....repositories.users import create_user, get_by_email
-from ....schemas.models import Token, UserCreate, UserOut
+from ....schemas.models import TokenResponse, UserCreate, UserOut
 from ....security import create_access_token, create_refresh_token, verify_password
 from ....dependencies import get_current_user
 
@@ -33,7 +33,7 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@router.post("/login", response_model=Token, summary="Login")
+@router.post("/login", response_model=TokenResponse, summary="Login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = get_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.password_hash):
@@ -41,9 +41,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     access_expires = timedelta(minutes=settings.access_token_expire_minutes)
     refresh_expires = timedelta(minutes=settings.refresh_token_expire_minutes)
-    return Token(
+    return TokenResponse(
         access_token=create_access_token(user.id, user.role.value, access_expires),
         refresh_token=create_refresh_token(user.id, user.role.value, refresh_expires),
+        role=user.role.value,
     )
 
 

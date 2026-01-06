@@ -34,7 +34,7 @@ export async function login(email: string, password: string) {
     body,
   })
   if (!res.ok) throw new Error(await res.text())
-  return res.json() as Promise<{ access_token: string; refresh_token: string }>
+  return res.json() as Promise<{ access_token: string; refresh_token: string; role: string }>
 }
 
 export async function getClaims(token: string) {
