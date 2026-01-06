@@ -154,6 +154,14 @@ function App() {
     }
   }
 
+  const handleAdminReview = (subject: string) => {
+    setMessage(`Admin action placeholder: review ${subject} (hook to backend when ready).`)
+  }
+
+  const handleAdminDispute = (id: string) => {
+    setMessage(`Admin action placeholder: resolve dispute ${id} (hook to backend when ready).`)
+  }
+
   const handleFetchReport = async () => {
     try {
       setLoading(true)
@@ -481,7 +489,7 @@ function App() {
                       </div>
                       <div className="admin-actions">
                         <span className={`status ${org.status === 'verified' ? 'verified' : 'pending'}`}>{org.status}</span>
-                        <button className="cta tiny ghost">Review</button>
+                        <button className="cta tiny ghost" onClick={() => handleAdminReview(org.name)}>Review</button>
                       </div>
                     </div>
                   ))}
@@ -503,7 +511,7 @@ function App() {
                       </div>
                       <div className="admin-actions">
                         <span className={`status ${d.status}`}>{d.status}</span>
-                        <button className="cta tiny ghost">Decide</button>
+                        <button className="cta tiny ghost" onClick={() => handleAdminDispute(d.id)}>Decide</button>
                       </div>
                     </div>
                   ))}
