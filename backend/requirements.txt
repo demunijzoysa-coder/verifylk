@@ -1,0 +1,7 @@
+fastapi==0.110.0
+uvicorn[standard]==0.23.2
+pydantic==2.6.1
+SQLAlchemy==2.0.25
+python-dotenv==1.0.1
+passlib[bcrypt]==1.7.4
+python-jose==3.3.0
