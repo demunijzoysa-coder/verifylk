@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router as api_router
 from .config import get_settings
+from .middleware.audit import audit_middleware
 
 
 def create_app() -> FastAPI:
@@ -16,6 +17,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.middleware("http")(audit_middleware)
 
     @app.get("/", summary="Root")
     def root():
