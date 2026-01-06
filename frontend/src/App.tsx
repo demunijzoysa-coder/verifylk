@@ -33,6 +33,7 @@ function App() {
   const [report, setReport] = useState<Claim | null>(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showAuthOverlay, setShowAuthOverlay] = useState(!localStorage.getItem('access_token'))
 
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -40,7 +41,7 @@ function App() {
     email: '',
     password: '',
     full_name: '',
-    role: 'candidate',
+    role: 'candidate' as Role,
   })
 
   const [claimForm, setClaimForm] = useState(defaultClaim)
@@ -70,6 +71,7 @@ function App() {
       setRole(res.role as Role)
       setToken(res.access_token)
       setMessage(`Logged in as ${res.role}`)
+      setShowAuthOverlay(false)
     } catch (err: any) {
       setMessage(err.message || 'Login failed')
     } finally {
@@ -156,6 +158,76 @@ function App() {
     setClaims([])
     setInbox([])
     setReport(null)
+    setShowAuthOverlay(true)
+  }
+
+  if (showAuthOverlay) {
+    return (
+      <div className="overlay">
+        <div className="overlay-card">
+          <div>
+            <div className="badge">VerifyLK</div>
+            <h1>Sign in to continue</h1>
+            <p className="muted">Use your role to access the dashboard. Accounts persist on this device until you log out.</p>
+            {message && <div className="flash">{message}</div>}
+          </div>
+
+          <div className="form-grid">
+            <label className="field">
+              <span>Email</span>
+              <input value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" />
+            </label>
+            <label className="field">
+              <span>Role</span>
+              <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                <option value="candidate">Candidate</option>
+                <option value="verifier">Verifier</option>
+                <option value="employer">Employer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+          </div>
+          <div className="cta-row">
+            <button className="cta primary" onClick={handleLogin} disabled={loading}>Login</button>
+          </div>
+
+          <hr className="divider" />
+
+          <div>
+            <h3>Create account</h3>
+            <div className="form-grid">
+              <label className="field">
+                <span>Full name</span>
+                <input value={registerForm.full_name} onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Email</span>
+                <input value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Password</span>
+                <input type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
+              </label>
+              <label className="field">
+                <span>Role</span>
+                <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value as Role })}>
+                  <option value="candidate">Candidate</option>
+                  <option value="verifier">Verifier</option>
+                  <option value="employer">Employer</option>
+                </select>
+              </label>
+            </div>
+            <div className="cta-row">
+              <button className="cta ghost" onClick={handleRegister} disabled={loading}>Register</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -168,11 +240,9 @@ function App() {
             Start the stack with <code>./start.ps1</code>, register, login, create claims, request verification, and share reports—all from this UI.
           </p>
           <div className="cta-row">
-            <button className="cta primary" onClick={handleLogin} disabled={loading}>Login</button>
-            <button className="cta ghost" onClick={handleRegister} disabled={loading}>Register</button>
-            <span className="cta-note">Roles: candidate, verifier, employer, admin.</span>
+            <button className="cta primary" onClick={logout}>Logout</button>
+            <span className="cta-note">Logged in as {role}</span>
           </div>
-          <div className="flash">Demo admin: admin@gmail.com / 1234 (role admin)</div>
           {message && <div className="flash">{message}</div>}
         </div>
         <div className="card report">

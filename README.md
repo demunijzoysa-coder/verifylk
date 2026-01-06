@@ -67,6 +67,21 @@ Key docs:
 
 This starts backend (FastAPI on 8000) and frontend (Vite on 5173) in separate terminals.
 
+## Accounts and login
+- Seeded admin (for testing): `admin@gmail.com` / `1234` (role `admin`). Created automatically on backend start.
+- Register other roles (candidate, verifier, employer) via the UI overlay. Tokens persist in the browser until you log out.
+
+## What the UI does
+- **Auth overlay**: appears first; login or register; once signed in you stay signed in on this device until logout.
+- **Candidate**: create claims, request verification, view claim statuses and scores.
+- **Verifier**: see inbox and approve/reject requests.
+- **Employer**: fetch a report by token (MVP uses claim id as token).
+
+## API quick links
+- Swagger: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
+- Health: http://127.0.0.1:8000/api/v1/health
+
 ## Roadmap (phased)
 - Phase 1: MVP flows, scoring, report links, moderation & dispute basics.
 - Phase 2: Org verification tiers, bulk verification, QR cards, employer API, SMS support.

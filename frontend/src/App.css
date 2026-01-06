@@ -113,6 +113,30 @@ p {
   color: #e5fff4;
 }
 
+.overlay {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.overlay-card {
+  max-width: 900px;
+  width: 100%;
+  background: linear-gradient(160deg, rgba(26, 37, 48, 0.95), rgba(10, 16, 22, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.2rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 1rem 0;
+}
+
 .metrics {
   display: flex;
   gap: 1.5rem;
