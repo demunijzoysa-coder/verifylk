@@ -1,44 +1,43 @@
-# Local Credential & Experience Verification System (Sri Lanka)
+# Local Credential & Experience Verification System (Sri Lanka) — Concept (In Development)
 
-Human-verified, evidence-backed experience verification for internships, apprenticeships, volunteering, informal work, and NGO placements in Sri Lanka. The goal is to help candidates prove experience, help verifiers respond efficiently, and give employers a trusted, explainable view of credibility.
+Evidence-backed, human-verified experience proof for internships, apprenticeships, volunteering, informal work, and NGO placements in Sri Lanka. This is an active development concept; expect changes as workflows and endpoints mature.
 
-## Problem
-- Informal and community work is hard to prove; references are inconsistent or unreachable.
+## Why
+- Sri Lanka’s informal and community work is hard to prove; references are inconsistent or unreachable.
 - Employers and programs spend time validating claims and still face fraud risk.
 - Youth and rural candidates lose opportunities because they cannot provide trusted evidence.
 
-## Solution
+## What
 - Verified endorsements from organizations/supervisors with time-bound validity.
 - Evidence-backed claims with audit logs and dispute handling.
 - Explainable, rules-based credibility scoring (no black box).
 - Shareable verification reports with signed, tamper-resistant links.
 
-## MVP Scope (Phase 1)
-- Roles: Candidate, Verifier (organization/supervisor), Employer (viewer), Admin.
-- Candidate: profile, experience claims, evidence upload, verification requests, shareable report.
-- Verifier: inbox, approve/reject with notes, confirm dates/role, optional proof attachment.
-- Employer: read-only report with verification details and score breakdown.
-- Admin: moderation basics, dispute workflow, audit logs.
+## Roles & Scope (MVP in progress)
+- Candidate: create claims, upload evidence, request verification, share reports.
+- Verifier: inbox, approve/reject with notes, confirm dates/role.
+- Employer: read-only report with score breakdown.
+- Admin: org verification toggle, dispute decisions, audit view (early stage).
 
-## Architecture (planned)
-- Frontend: Vite + React + TypeScript, role-based UI, report view.
-- Backend: FastAPI (Python) with JWT auth scaffold, Postgres-ready via SQLAlchemy (dev uses SQLite), S3-compatible storage placeholders, email hook.
-- Infrastructure: `.env` driven config, rate-limit and audit stubs, signed share tokens.
+## Architecture (current)
+- Frontend: Vite + React + TypeScript; role-based UI and report view.
+- Backend: FastAPI (Python), JWT auth scaffold, SQLAlchemy (Postgres-ready; SQLite for dev), S3/email placeholders.
+- Config: `.env` driven; signed links and audit/rate-limit stubs.
 
-## Repository layout (incremental)
+## Repository layout
 - `backend/` — FastAPI service, domain models, scoring, routes.
 - `frontend/` — Vite React client with role flows and report UI.
 - `docs/` — PRD, architecture, API spec, data schema, pilot plan.
 
-## Getting started
+## Run locally
 Prereqs: Python 3.11+, Node 18+, npm, Git.
 
 Backend:
 ```bash
 cd backend
-python -m venv .venv && . .venv/Scripts/activate  # use `source .venv/bin/activate` on macOS/Linux
+python -m venv .venv && . .venv/Scripts/activate  # or source .venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 Frontend:
@@ -54,35 +53,26 @@ cd backend
 pytest
 ```
 
-Key docs:
-- docs/PRD.md — product requirements
-- docs/architecture.md — system design
-- docs/database-schema.md — tables
-- docs/api-spec.md — endpoints
-- docs/scoring.md — scoring rules
-
-## One-command launcher
-- Windows: `.\start.ps1` (add `-SkipInstall` after first run to speed up)
+## One-command start
+- Windows: `.\start.ps1` (add `-SkipInstall` after first run)
 - macOS/Linux: `./start.sh` (use `--skip-install` after first run)
-
-This starts backend (FastAPI on 8000) and frontend (Vite on 5173) in separate terminals.
+Starts backend (8000) and frontend (5173) in separate terminals.
 
 ## One-command stop
 - Windows: `.\stop.ps1`
 - macOS/Linux: `./stop.sh`
-Best effort: stops processes on ports 8000 and 5173; close any remaining dev terminals if still running.
+Attempts to stop processes on ports 8000 and 5173; close any remaining dev terminals if still running.
 
 ## Accounts and login
 - Seeded admin (for testing): `admin@gmail.com` / `1234` (role `admin`). Created automatically on backend start.
-- Register other roles (candidate, verifier, employer) via the UI overlay. Tokens persist in the browser until you log out.
+- Register other roles (candidate, verifier, employer) via the auth overlay. Tokens persist in the browser until you log out.
 
-## What the UI does
-- **Auth overlay**: appears first; login or register; once signed in you stay signed in on this device until logout.
-- **Role-specific views**:
-  - Candidate: create claims, request verification, view statuses and scores.
-  - Verifier: inbox to approve/reject requests.
-  - Employer: fetch a report by token (MVP uses claim id as token).
-  - Admin: org verification toggle, disputes resolve/dismiss, audit log list (sample data/seeded orgs).
+## What the UI does today
+- Auth overlay: login/register first; stays signed in until logout.
+- Candidate: create claims, request verification, view statuses/scores.
+- Verifier: inbox to approve/reject requests.
+- Employer: fetch a report by token (MVP uses claim id as token).
+- Admin: org verification toggle, disputes resolve/dismiss, audit log list (seeded orgs/sample data; evolving).
 
 ## API quick links
 - Swagger: http://127.0.0.1:8000/docs
