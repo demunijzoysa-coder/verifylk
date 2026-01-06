@@ -35,6 +35,23 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [showAuthOverlay, setShowAuthOverlay] = useState(!localStorage.getItem('access_token'))
 
+  const adminOrgs = [
+    { name: 'Community Bridge', status: 'pending', contact: 'org@community.lk' },
+    { name: 'TechWorks Jaffna', status: 'verified', contact: 'hello@techworks.lk' },
+    { name: 'GreenHands', status: 'pending', contact: 'team@greenhands.lk' },
+  ]
+
+  const adminDisputes = [
+    { id: 'DSP-104', claim: 'Volunteer Coordinator', status: 'open', reason: 'Dates mismatch' },
+    { id: 'DSP-089', claim: 'Apprentice Technician', status: 'under_review', reason: 'Supervisor contested rating' },
+  ]
+
+  const adminAudits = [
+    { action: 'claim.update', actor: 'candidate:malsha', target: 'CLM-220', time: '2h ago' },
+    { action: 'verification.decision', actor: 'verifier:techworks', target: 'CLM-219', time: '1d ago' },
+    { action: 'auth.login', actor: 'admin', target: 'system', time: '1d ago' },
+  ]
+
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [registerForm, setRegisterForm] = useState({
@@ -449,7 +466,68 @@ function App() {
               </div>
               <span className="eyebrow">Moderation & org verification</span>
             </div>
-            <p className="muted">Admin tools will include org verification, dispute review, and audit inspection. (Placeholder view)</p>
+            <div className="admin-grid">
+              <div className="admin-card">
+                <div className="admin-head">
+                  <p className="eyebrow">Org verification</p>
+                  <span className="eyebrow">Pending: {adminOrgs.filter((o) => o.status === 'pending').length}</span>
+                </div>
+                <div className="admin-list">
+                  {adminOrgs.map((org) => (
+                    <div className="admin-row" key={org.name}>
+                      <div>
+                        <p className="claim-title">{org.name}</p>
+                        <p className="muted">{org.contact}</p>
+                      </div>
+                      <div className="admin-actions">
+                        <span className={`status ${org.status === 'verified' ? 'verified' : 'pending'}`}>{org.status}</span>
+                        <button className="cta tiny ghost">Review</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-card">
+                <div className="admin-head">
+                  <p className="eyebrow">Disputes</p>
+                  <span className="eyebrow">Open: {adminDisputes.filter((d) => d.status !== 'resolved').length}</span>
+                </div>
+                <div className="admin-list">
+                  {adminDisputes.map((d) => (
+                    <div className="admin-row" key={d.id}>
+                      <div>
+                        <p className="claim-title">{d.id}</p>
+                        <p className="muted">{d.claim}</p>
+                        <p className="eyebrow">{d.reason}</p>
+                      </div>
+                      <div className="admin-actions">
+                        <span className={`status ${d.status}`}>{d.status}</span>
+                        <button className="cta tiny ghost">Decide</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-card">
+                <div className="admin-head">
+                  <p className="eyebrow">Audit log</p>
+                  <span className="eyebrow">Recent</span>
+                </div>
+                <div className="admin-list">
+                  {adminAudits.map((a, idx) => (
+                    <div className="admin-row" key={`${a.action}-${idx}`}>
+                      <div>
+                        <p className="claim-title">{a.action}</p>
+                        <p className="muted">{a.actor} → {a.target}</p>
+                      </div>
+                      <span className="eyebrow">{a.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </section>
