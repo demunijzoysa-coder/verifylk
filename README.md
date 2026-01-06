@@ -48,6 +48,19 @@ npm install
 npm run dev
 ```
 
+Tests:
+```bash
+cd backend
+pytest
+```
+
+Key docs:
+- docs/PRD.md — product requirements
+- docs/architecture.md — system design
+- docs/database-schema.md — tables
+- docs/api-spec.md — endpoints
+- docs/scoring.md — scoring rules
+
 ## Roadmap (phased)
 - Phase 1: MVP flows, scoring, report links, moderation & dispute basics.
 - Phase 2: Org verification tiers, bulk verification, QR cards, employer API, SMS support.
